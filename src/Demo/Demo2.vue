@@ -21,112 +21,88 @@
   import VueDocumentEditor from '../DocumentEditor/DocumentEditor.vue'
   // import InvoiceTemplate from './InvoiceTemplate.vue';
 
-  // let valueBoard = document.getElementById("value-board")
-  // valueBoard.innerText = "aaaa"
+  let col_element, next_element, cursorStart = 0, dragStart = false, width, th_width, next_width = undefined, resize, resize_left, table_wt, resizeCheck;
+  let container = document.getElementById("container"),
+          table = document.getElementById("table_resize"),
+          table_th = table.getElementsByTagName("th"),
+          bodyRect = document.body.getBoundingClientRect()
 
-  let mousedown = false; //마우스를 누른 상태
-  let td = ""; //사이즈 변경할 td
-  let td_width; //변경할 td의 width,
-  let x = 0; //마우스 드레그전 가로위치
-  function TCstartColResize(obj){
-    mousedown = true;
-    td = obj;
-    td_width = td.width;
-    x = event.clientX;
+  container.style.position = "relative";
+
+  function mouseDown(){
+    // console.log("마우스 다운");
+    //alert(this);
+    resize = this;
+    resizeCheck = resize.classList.contains("y_resize");
+    let col_index = parseInt(resize.getAttribute("data-resizecol"))-1;
+    col_element = table_th[col_index];
+    next_element = table_th[col_index+1];
+    dragStart = true;
+    cursorStart = (resizeCheck)?event.pageX:event.pageY;
+    let elm_bound = col_element.getBoundingClientRect();
+    width = elm_bound.width;
+    table_wt =table.offsetWidth;
+    if(next_element != undefined){
+      let next_bound = next_element.getBoundingClientRect();
+      next_width = next_bound.width;
+    }
+    resize_left = (this.getBoundingClientRect()).left - bodyRect.left;
   }
-  function TCColResize() {
-    if (mousedown){
-      let distX = event.x - x; //이동한 간격
-      td.width = parseInt(td_width) + parseInt(distX);
+  function mouseMove(){
+    if(dragStart){
+      let cursorPosition = (resizeCheck)?event.pageX:event.pageY;
+      let mouseMoved = (cursorPosition - cursorStart);
+      let newLeft = resize_left + mouseMoved;
+      let newWidth = width + mouseMoved;
+      let new_nextWidth;
+      if(next_element != undefined){
+        new_nextWidth = next_width - mouseMoved;
+      }
+      if(newWidth > 30 && (new_nextWidth > 30 || next_element == undefined)){
+        col_element.style.cssText = "width: "+newWidth+"px;";
+        if(next_element != undefined){
+          next_element.style.cssText = "width: "+new_nextWidth+"px";
+        }
+        else{
+          table.style.width = (table_wt + mouseMoved)+"px";
+        }
+        resize.style.cssText = "left: "+newLeft+"px;";
+      }
     }
   }
-  function TCstopColResize() {
-    mousedown = false;
-    td = '';
+  function mouseUp(){
+    if(dragStart){
+      dragStart = false;
+    }
   }
-  function cell_left(obj) {//마우스가 셀의 왼쪽인지 측정
-    console.log("event.offsetX", event.offsetX)
-    console.log("obj.cellIndex", obj.cellIndex)
-    if (event.offsetX < 5 && obj.cellIndex!=0)  //두번째 셀부터 커서가 셀의 왼쪽 border에(-1~4) 위치할 때
-      return true;
-    else
-      return false;
+  function initEvents(table_th){
+    let tb_resize = container.getElementsByClassName("tb_resize");
+    let th_length = table_th.length;
+    for(let i = 0; i<th_length; i++){
+      document.body.addEventListener("mousemove", mouseMove);
+      tb_resize[i].addEventListener("mousedown", mouseDown);
+      tb_resize[i].addEventListener("mouseup", mouseUp);
+      table_th[i].style.width = th_width+"px";
+    }
   }
-  function cell_right(obj) {//마우스가 셀의 오른쪽인지 측정
-    console.log(obj)
-    console.log("obj.width", obj.width)
-    // console.log("event.offsetX", event.offsetX)
-    // console.log("obj.width-4",obj.width-4)
-    if (event.offsetX * 0.6 > obj.width-4)
-      return true;
-    else
-      return false;
+  function setTdWidth(){
+    let elm_bound = table.getBoundingClientRect();
+    let table_wt = elm_bound.width;
+    let th_length = table_th.length;
+    th_width = table_wt/th_length;
   }
-
-  let mouse_down = function() {
-    try{
-      let now_mousedown = event.target;
-      if (now_mousedown.className.toUpperCase()=="COLRESIZE") {
-        if ( cell_left(now_mousedown) ) {
-          now_mousedown = now_mousedown.parentNode.childNodes[now_mousedown.cellIndex-1];
-        } else if ( !cell_right(now_mousedown) ) {
-          return true;//오른쪽도 왼쪽도 아니면 사이즈 조절 안함
-        }
-        TCstartColResize(now_mousedown);
-      }
-    } catch(e) { return true; }
+  function createResizeDiv(){
+    let cont = document.getElementById("container");
+    let th_length = table_th.length;
+    for(let i=1; i<=th_length; i++){
+      let yDiv = document.createElement("div");
+      yDiv.className = "y_resize tb_resize";
+      yDiv.setAttribute("data-resizecol",i);
+      let leftPos = (i*th_width)+0.5;
+      yDiv.style.cssText = "left: "+leftPos+"px;";
+      cont.append(yDiv);
+    }
   }
-
-  let mouse_move = function() {
-    try{
-      let now_mousemove = event.target;
-      if (now_mousemove.className.toUpperCase()=="COLRESIZE" || td!="") {
-        //셀의 가장자리면 마우스 커서 변경
-        if ( cell_left(now_mousemove) || cell_right(now_mousemove) ) {
-          now_mousemove.style.cursor = "col-resize";
-        } else {
-          now_mousemove.style.cursor = "";
-        }
-        TCColResize(now_mousemove);
-      } else {
-        now_mousemove.style.cursor = "";
-      }
-    } catch(e) { return true; }
-  }
-
-  let mouse_up = function() {
-    try{
-      let now_mouseup = event.target;
-      //if(now_mouseup.className=="colResize"){
-      TCstopColResize(now_mouseup);
-      //}
-    } catch(e) { return true; }
-  }
-
-  let select_start = function() {
-    try{
-      if(td != ""){
-        return false;
-      }
-    } catch(e) { return true; }
-  }
-
-  //리사이즈시작
-  document.addEventListener("mousedown", mouse_down)
-
-  //리사이즈
-  document.addEventListener("mousemove", mouse_move)
-
-  //리사이즈종료
-  document.addEventListener("mouseup", mouse_up)
-
-  //리사이즈 도중 텍스트 선택 금지
-  document.addEventListener("selectstart", select_start)
-
-
-
-
-
 
   export default {
     components: { VueDocumentEditor, VueFileToolbarMenu },
@@ -146,25 +122,25 @@
         mounted: false, // will be true after this component is mounted
         undo_count: -1, // contains the number of times user can undo (= current position in content_history)
         content_history: [], // contains the content states for undo/redo operations
-
-        col_element: "",
-        next_element: "",
-        cursorStart: 0,
-        dragStart: false,
-        width: "",
-        th_width: "",
-        next_width: undefined,
-        next_height: "",
-        resize: "",
-        resize_left: "",
-        table_wt: "",
-        resizeCheck: "",
-        container: "", //document.getElementById("container"),
-        table: "", //document.getElementById("table_resize"),
-        table_th: "", //table.getElementsByTagName("th"),
-        bodyRect: "", //document.body.getBoundingClientRect()
-
-        // container.style.position = "relative";
+        // container: "",
+        // table: "",
+        // table_th: "",
+        // bodyRect: "",
+        // col_element: "",
+        // next_element: "",
+        // cursorStart: 0,
+        // dragStart: false,
+        // width: 0,
+        // height: 0,
+        // th_width: 0,
+        // next_width: undefined,
+        // next_height: 0,
+        // resize: 0,
+        // resize_left: 0,
+        // table_wt: 0,
+        // resizeCheck: false,
+        // tb_resize: "",
+        // th_length: 0
       }
     },
 
@@ -426,60 +402,79 @@
 
     methods: {
 
+      // 표 만들기
       makeTable() {
         let t = `
-          <table border="1" style="margin: 0.5rem;">
-            <tr>
-                <td width="100" class="colresize">가</td>
-                <td width="100" class="colresize">가</td>
-                <td width="100" class="colresize">가</td>
-            </tr>
-            <tr>
-                <td width="100" class="colresize">가</td>
-                <td width="100" class="colresize">가</td>
-                <td width="100" class="colresize">가</td>
-            </tr>
-        </table>
+          <div class="container" id="container">
+            <table border="0" cellpadding = "0" cellspacing="0" id="table_resize" contenteditable="true">
+              <tr>
+                <th><div>Id</div></th>
+                <th><div>First Name</div></th>
+                <th><div>Last Name</div></th>
+                <th><div>Age</div></th>
+              </tr>
+              <tr>
+                <td><div>1</div></td>
+                <td><div>Gowri</div></td>
+                <td><div>Prasanth</div></td>
+                <td><div>24</div></td>
+              </tr>
+              <tr>
+                <td><div>2</div></td>
+                <td><div>Saravana</div></td>
+                <td><div>vel</div></td>
+                <td><div>24</div></td>
+              </tr>
+              <tr>
+                <td><div>3</div></td>
+                <td><div>Kumar</div></td>
+                <td><div>KG</div></td>
+                <td><div>24</div></td>
+              </tr>
+            </table>
+          </div>
         `;
         document.execCommand("insertHtml", false, t)
-        // this.setTdWidth()
-        // this.createResizeDiv()
-        // this.initEvents()
+        // this.container = document.getElementById("container")
+        // this.table = document.getElementById("table_resize")
+        // this.table_th = this.table.getElementsByTagName("th")
+        // this.bodyRect = document.body.getBoundingClientRect()
+        // this.container.style.position = "relative"
+        setTdWidth(table)
+        createResizeDiv()
+        initEvents(table_th)
       },
-
-      aaa() {
-        console.log(222222222222)
-      },
-
-      setTdWidth() {
-
-        //초기화
-        this.container = document.getElementById("container")
-        this.table = document.getElementById("table_resize")
-        this.table_th = this.table.getElementsByTagName("th")
-        this.bodyRect = document.body.getBoundingClientRect()
-        this.container.style.position = "relative";
-
-        let elm_bound = this.table.getBoundingClientRect();
-        let table_wt = elm_bound.width;
-        let th_length = this.table_th.length;
-        this.th_width = table_wt/th_length;
-
-        console.log("table_wt", table_wt, "th_length", th_length, "th_width", this.th_width)
-      },
-
-      createResizeDiv() {
-        let cont = document.getElementById("container");
-        let th_length = this.table_th.length;
-        for(let i=1; i<=th_length; i++){
-          let yDiv = document.createElement("div");
-          yDiv.className = "y_resize tb_resize";
-          yDiv.setAttribute("data-resizecol",i);
-          let leftPos = (i*this.th_width)+0.5;
-          yDiv.style.cssText = "left: "+leftPos+"px;";
-          cont.append(yDiv);
-        }
-      },
+      //
+      // setTdWidth() {
+      //   let elm_bound = this.table.getBoundingClientRect();
+      //   let table_wt = elm_bound.width;
+      //   let th_length = this.table_th.length;
+      //   this.th_width = table_wt/th_length;
+      // },
+      //
+      // createResizeDiv() {
+      //   let cont = document.getElementById("container");
+      //   let th_length = this.table_th.length;
+      //   for(let i = 1; i <= th_length; i++) {
+      //     let yDiv = document.createElement("div");
+      //     yDiv.className = "y_resize tb_resize";
+      //     yDiv.setAttribute("data-resizecol", i);
+      //     let leftPos = (i * this.th_width) + 0.5;
+      //     yDiv.style.cssText = "left: " + leftPos + "px;";
+      //     cont.append(yDiv);
+      //   }
+      // },
+      //
+      // regEvent() {
+      //   this.tb_resize = this.container.getElementsByClassName("tb_resize")
+      //   this.th_length = this.table_th.length
+      //   for (let i = 0; i < this.th_length; i++) {
+      //     document.body.addEventListener("mousemove", mouseMove);
+      //     this.tb_resize[i].addEventListener("mousedown", mouseDown);
+      //     this.tb_resize[i].addEventListener("mouseup", mouseUp);
+      //     this.table_th[i].style.width = this.th_width+"px";
+      //   }
+      // },
 
       // Page overlays (headers, footers, page numbers)
       overlay (page, total) {
@@ -604,6 +599,7 @@
     --bar-button-open-bkg: #e6f4ea;
   }
 </style>
+
 <style>
   .container{
     position: relative;
@@ -633,6 +629,5 @@
     height: 102%;
     background: transparent;
     cursor: col-resize;
-    border: 1px solid red;
   }
 </style>
