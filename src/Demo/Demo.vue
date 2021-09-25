@@ -26,6 +26,7 @@
   // let td_width;
   let x = 0
   let targets = []
+  let highlightDown = false
 
   function startResize(startObj) {
     mousedown = true
@@ -34,8 +35,7 @@
     x = event.clientX
     targets = getResizeTargets()
   }
-
-  //리사이즈 대상 type: [ { index, width } ]
+  //리사이즈 target 구하기 (target: [ index, width ])
   function getResizeTargets() {
     if (mousedown) {
       //해당 td의 colspan을 계산하여 실제 순서(k)를 구함
@@ -69,30 +69,32 @@
       return targets
     }
   }
-
-  // [ {index: index, width: width} ]
-  function changeWidth() {
+  function resizeWidth() {
     if (mousedown) {
+      //distX 구하기
+      //width가 음수가 되지 않고 하한(10px)을 유지하도록 distX 값을 조절
       let distX = event.x - x;
-      let nowTrs = startTd.parentElement.parentElement.children
-      // for (let i = 0; i < targets.length; i++) {
-      //   if (targets[i].width + distX < 10) {
-      //
-      //   }
-      // }
-      for (let i = 0; i < targets.length; i++) {
-        // console.log(nowTrs[i])
-        // console.log(targets[i])
-        // console.log(nowTrs[i].children[targets[i].index])
-        // console.log(nowTrs[i].children[targets[i].index].width)
-        // console.log(targets[i].width)
-        if (targets[i].index >= 0) {
-          let newWidth = targets[i].width + distX
-
-          if (newWidth < 0)
-
-          nowTrs[i].children[targets[i].index].width = newWidth
+      let min = 100000
+      let minI = -1
+      //음수 width 발생을 막고자
+      if (distX < 0) { //속도 향상을 위해 distX가 음수일 경우만
+        for (let i = 0; i < targets.length; i++) {
+          //targets의 최소 width
+          if (targets[i].width + distX < min) {
+            min = targets[i].width + distX
+            minI = i
+          }
+          //최소 width 가 10 이하면 distX를 증가시켜 최소 10 유지
+          if (min < 10) {
+            distX = 10 - targets[minI].width
+          }
         }
+      }
+
+      //resize
+      let nowTrs = startTd.parentElement.parentElement.children
+      for (let i = 0; i < targets.length; i++) {
+        nowTrs[i].children[targets[i].index].width = targets[i].width + distX
       }
     }
   }
@@ -112,6 +114,14 @@
     else
       return false;
   }
+  function resetHighlight(table) {
+    if (table.id)
+    let TDs = table.getElementsByClassName("highlighted")
+    console.log(TDs.length)
+    for (let TD of TDs) {
+      TD.classList.remove("highlighted")
+    }
+  }
 
   document.onmousedown = function() {
     try {
@@ -121,12 +131,20 @@
         if ( isCellLeft(eventedTd) ) {
           eventedTd = eventedTd.parentNode.childNodes[eventedTd.cellIndex-1]
           startResize(eventedTd)
+          return
         }
         //셀 오른쪽 border에 위치
         if ( isCellRight(eventedTd) ) {
           startResize(eventedTd)
+          return
         }
+        //border 부근이 아닌 셀 중앙
+        highlightDown = true
+        console.log("highlightDown", highlightDown)
+        return
       }
+      resetHighlight(eventedTd.parentElement.parentElement.parentElement)
+
     } catch(e) {
       // console.log(e)
     }
@@ -143,10 +161,14 @@
           eventedTd.style.cursor = "col-resize"
         } else {
           eventedTd.style.cursor = ""
+          //셀선택
+          if (highlightDown) {
+            eventedTd.classList.add("highlighted")
+          }
         }
 
         if (mousedown) {
-          changeWidth(targets)
+          resizeWidth(targets)
         }
 
       } else {
@@ -157,18 +179,19 @@
     }
   }
 
-
   document.onmouseup = function() {
     try {
       let now_mouseup = window.event.srcElement;
-      //if(now_mouseup.className=="colResize"){
-      stopResize(now_mouseup);
-      //}
+
+      //셀선택 해제
+      highlightDown = false
+
+      //리사이즈 종료
+      stopResize(now_mouseup)
     } catch(e) {
       // console.log(e)
     }
   }
-
 
   document.onselectstart = function(){
     try{
@@ -691,5 +714,8 @@
     border: 1px solid red;
   }
   .colresize {
+  }
+  .highlighted {
+    background: antiquewhite;
   }
 </style>
