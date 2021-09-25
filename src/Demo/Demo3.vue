@@ -21,208 +21,123 @@
   import VueDocumentEditor from '../DocumentEditor/DocumentEditor.vue'
   // import InvoiceTemplate from './InvoiceTemplate.vue';
 
-  var mousedown = false;
-  var td = "";
-  // var td_width;
-  var x = 0;
-  let targets = [];
+  // let valueBoard = document.getElementById("value-board")
+  // valueBoard.innerText = "aaaa"
 
+  let mousedown = false; //마우스를 누른 상태
+  let td = ""; //사이즈 변경할 td
+  let td_width; //변경할 td의 width,
+  let x = 0; //마우스 드레그전 가로위치
   function TCstartColResize(obj){
     mousedown = true;
     td = obj;
-    // td_width = td.width;
+    td_width = td.width;
     x = event.clientX;
-    targets = resizeMatrix()
+    console.log("------시작(x): ", x)
   }
-
-  function resizeMatrix() {
-    if (mousedown) {
-      // let distX = event.x - x;
-
-      //해당 td의 실순서(k) 구함
-      let k = 0
-      let nowTds = td.parentElement.children
-      for (let i = 0; i < nowTds.length; i++) {
-        if (td.cellIndex < nowTds[i].cellIndex) {
-          break
-        } else {
-          k = k + nowTds[i].colSpan
-        }
-      }
-
-      let nowTrs = td.parentElement.parentElement.children
-      let targets = []
-      for (let i = 0; i < nowTrs.length; i++) {
-        let nowTr = nowTrs[i]
-        let ck = 0 //현재 td의 k
-        let nowTds = nowTr.children
-        let targetTd = null
-        for (let j = 0; j < nowTds.length; j++) {
-          let nowTd = nowTds[j]
-          ck += nowTd.colSpan
-          if (k < ck) {
-            targets.push({ index: nowTd.cellIndex, width: parseInt(nowTd.width) })
-            break
-          }
-          if (k === ck) {
-            //todo parseInt(nowTd.width) 값이 고정되어야 함.. 초기값을 따로 저정할 필요 있음
-            targetTd = { index: nowTd.cellIndex, width: parseInt(nowTd.width) } // + parseInt(distX)
-            targets.push(targetTd)
-            break
-          }
-        }
-      }
-      console.log("targets", targets)
-      return targets
-    }
-    return []
-  }
-
-  // [ {index: index, width: width} ]
-  function NewTCColResize()
-  {
-    if (mousedown) {
-      let distX = event.x - x;
-      let nowTrs = td.parentElement.parentElement.children
-      for (let i = 0; i < targets.length; i++) {
-        // console.log(nowTrs[i])
-        // console.log(targets[i])
-        // console.log(nowTrs[i].children[targets[i].index])
-        // console.log(nowTrs[i].children[targets[i].index].width)
-        // console.log(targets[i].width)
-        if (targets[i].index >= 0) {
-          nowTrs[i].children[targets[i].index].width = targets[i].width + distX
-        }
-      }
-    }
-  }
-  /*
-  function TCColResize()
-  {
+  function TCColResize() {
     if (mousedown){
-      var distX = event.x - x;
-      // td.width = parseInt(td_width) + parseInt(distX);
-      // let newWidth = parseInt(td_width) + parseInt(distX);
-
-      //해당 td의 실순서(k) 구함
-      let k = 0
-      for (let i = 0; i < td.parentElement.children.length; i++) {
-        // console.log("td.parentElement.children[i].colSpan====", td.parentElement.children[i].colSpan)
-        // console.log("td.cellIndex", td.cellIndex, "td.parentElement.children[i].cellIndex", td.parentElement.children[i].cellIndex)
-        if (td.cellIndex < td.parentElement.children[i].cellIndex) {
-          break
-        } else {
-          // console.log("td.parentElement.children[i].colspan", td.parentElement.children[i].colSpan)
-          k = k + td.parentElement.children[i].colSpan
-        }
-      }
-      console.log("td", td, "k", k)
-
-      for (let i = 0; i < td.parentElement.parentElement.children.length; i++) {
-        let nowTr = td.parentElement.parentElement.children[i]
-        console.log("tr ========", nowTr)
-        let ck = 0 //현재 td의 k
-        for (let j = 0; j < nowTr.children.length; j++) {
-          let nowTd = nowTr.children[j]
-          console.log("td", nowTd)
-          console.log("k", k, "tdWidth", nowTd.width, "distX", parseInt(distX), "cellIndex", nowTd.cellIndex, "colSpan", nowTd.colSpan)
-          ck += nowTd.colSpan
-          console.log("ck", ck)
-          if (k === ck) {
-            console.log("k === ck 같음")
-            nowTd.width = parseInt(nowTd.width) + parseInt(distX)
-            break
-          }
-        }
-      }
-
+      console.log("td", td, "x", x)
+      console.log("event.x", event.x)
+      let distX = event.x - x; //이동한 간격
+      td.width = parseInt(td_width) + parseInt(distX);
     }
   }
-  */
-  function TCstopColResize(){
+  function TCstopColResize() {
     mousedown = false;
     td = '';
   }
-
-  function cell_left(obj){
-    if(event.offsetX < 5 && obj.cellIndex!=0)
+  function cell_left(obj) {//마우스가 셀의 왼쪽인지 측정
+    // console.log("event.offsetX", event.offsetX)
+    // console.log("obj.cellIndex", obj.cellIndex)
+    if (event.offsetX < 10 && obj.cellIndex!=0)  //두번째 셀부터 커서가 셀의 왼쪽 border에(-1~4) 위치할 때
       return true;
     else
       return false;
   }
-  function cell_right(obj){
-    if(event.offsetX > obj.width-4)
+  function cell_right(obj) {//마우스가 셀의 오른쪽인지 측정
+    // console.log("obj", obj)
+    // console.log("obj.width", obj.width)
+    // console.log("event.offsetX", event.offsetX)
+    // console.log("obj.width-4",obj.width-4)
+    if (event.offsetX * 0.6 > obj.width-9)
       return true;
     else
       return false;
   }
 
-
-  document.onmousedown = function(){
+  let mouse_down = function() {
     try{
-      var now_mousedown = window.event.srcElement;
-      if(now_mousedown.className.toUpperCase()=="COLRESIZE"){
-        if( cell_left(now_mousedown) ){
+      let now_mousedown = event.target;
+      if (now_mousedown.className.toUpperCase()=="COLRESIZE") {
+        // console.log("now_mousedown.parentNode.childNodes", now_mousedown.parentNode.childNodes)
+        if ( cell_left(now_mousedown) ) {
+          console.log("now_mousedown", now_mousedown, "의 왼쪽임... index:" , now_mousedown.cellIndex)
           now_mousedown = now_mousedown.parentNode.childNodes[now_mousedown.cellIndex-1];
-        }else if( !cell_right(now_mousedown) ){
-          return true;
+          console.log("변경된 now_mousedown", now_mousedown)
+        } else if (cell_right(now_mousedown)) {
+          console.log("now_mousedown", now_mousedown, "의 오른쪽임...")
+        } else {
+          console.log("now_mousedown", now_mousedown, "의 조절 영역이 아님. 사이즈 조절 안함.")
+          return true;//오른쪽도 왼쪽도 아니면 사이즈 조절 안함
         }
         TCstartColResize(now_mousedown);
       }
-    }catch(e){ return true; }
+    } catch(e) { return true; }
   }
 
-
-  document.onmousemove = function(){
+  let mouse_move = function() {
     try{
-      var now_mousemove = window.event.srcElement;
-      if(now_mousemove.className.toUpperCase()=="COLRESIZE" || td!=""){
-
-        if( cell_left(now_mousemove) || cell_right(now_mousemove) ){
+      let now_mousemove = event.target;
+      if (now_mousemove.className.toUpperCase()=="COLRESIZE" || td!="") {
+        // console.log("~~~~~~~")
+        if (mousedown) console.log(" >>>>> mouse_move ==> now_mousemove", now_mousemove)
+        //셀의 가장자리면 마우스 커서 변경
+        if ( cell_left(now_mousemove) || cell_right(now_mousemove) ) {
           now_mousemove.style.cursor = "col-resize";
-        }else{
+        } else {
           now_mousemove.style.cursor = "";
         }
-
-        NewTCColResize(resizeMatrix());
-
-      }else{
+        TCColResize(now_mousemove);
+        // mousedown = false
+      } else {
         now_mousemove.style.cursor = "";
       }
-    }catch(e){ return true; }
+    } catch(e) { return true; }
   }
 
-
-  document.onmouseup = function(){
+  let mouse_up = function() {
     try{
-      var now_mouseup = window.event.srcElement;
-//if(now_mouseup.className=="colResize"){
+      let now_mouseup = event.target;
+      //if(now_mouseup.className=="colResize"){
       TCstopColResize(now_mouseup);
-//}
-    }catch(e){ return true; }
+      //}
+    } catch(e) { return true; }
   }
 
-
-  document.onselectstart = function(){
+  let select_start = function() {
     try{
       if(td != ""){
-        return false;
+        console.log("*************************** td yes...")
+        return false
+      } else {
+        console.log("**********1***************** td no...")
+        return true
       }
-    }catch(e){ return true; }
+    } catch(e) { return true; }
   }
 
+  //리사이즈시작
+  document.addEventListener("mousedown", mouse_down)
 
-  // //리사이즈시작
-  // document.addEventListener("mousedown", mouse_down)
-  //
-  // //리사이즈
-  // document.addEventListener("mousemove", mouse_move)
-  //
-  // //리사이즈종료
-  // document.addEventListener("mouseup", mouse_up)
-  //
-  // //리사이즈 도중 텍스트 선택 금지
-  // document.addEventListener("selectstart", select_start)
+  //리사이즈
+  document.addEventListener("mousemove", mouse_move)
+
+  //리사이즈종료
+  document.addEventListener("mouseup", mouse_up)
+
+  //리사이즈 도중 텍스트 선택 금지
+  document.addEventListener("selectstart", select_start)
 
 
 
@@ -528,15 +443,20 @@
     methods: {
 
       makeTable() {
-        let t = `<table id="resize-table"><tbody><tr><td width=200" colspan="2" class="colresize">가</td><td width="100" class="colresize">다다다</td></tr><tr><td width="100" class="colresize">라라라라</td><td width="100" class="colresize">마마마마 마</td><td width="100" class="colresize">바바바바 바바</td></tr></tbody></table>`;
+        let t = `
+          <table >
+            <tr><td width="200" class="colresize">가</td><td width="200" class="colresize">나나</td><td width="200" class="colresize">다다다</td></tr>
+            <tr><td width="200" class="colresize">라라라라</td><td width="200" class="colresize">마마마마 마</td><td width="200" class="colresize">바바바바 바바</td></tr>
+          </table>
+        `;
         document.execCommand("insertHtml", false, t)
-        // let resizeTable = document.getElementById("resize-table")
-        // console.log("resizeTable", resizeTable)
-        // console.log("resizeTable", resizeTable.childElementCount)
-        // console.log("resizeTable", resizeTable.children[0].children)
         // this.setTdWidth()
         // this.createResizeDiv()
         // this.initEvents()
+      },
+
+      aaa() {
+        console.log(222222222222)
       },
 
       setTdWidth() {
@@ -724,5 +644,6 @@
     border: 1px solid red;
   }
   .colresize {
+
   }
 </style>
