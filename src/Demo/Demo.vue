@@ -17,73 +17,69 @@
 </template>
 
 <script>
-  import VueFileToolbarMenu from 'vue-file-toolbar-menu';
+  import VueFileToolbarMenu from 'vue-file-toolbar-menu'
   import VueDocumentEditor from '../DocumentEditor/DocumentEditor.vue'
   // import InvoiceTemplate from './InvoiceTemplate.vue';
 
-  var mousedown = false;
-  var td = "";
-  // var td_width;
-  var x = 0;
-  let targets = [];
+  let mousedown = false
+  let startTd = ""
+  // let td_width;
+  let x = 0
+  let targets = []
 
-  function TCstartColResize(obj){
-    mousedown = true;
-    td = obj;
-    // td_width = td.width;
-    x = event.clientX;
-    targets = resizeMatrix()
+  function startResize(startObj) {
+    mousedown = true
+    startTd = startObj
+    // td_width = startTd.width;
+    x = event.clientX
+    targets = getResizeTargets()
   }
 
-  function resizeMatrix() {
+  //리사이즈 대상 type: [ { index, width } ]
+  function getResizeTargets() {
     if (mousedown) {
-      // let distX = event.x - x;
-
-      //해당 td의 실순서(k) 구함
+      //해당 td의 colspan을 계산하여 실제 순서(k)를 구함
       let k = 0
-      let nowTds = td.parentElement.children
+      let nowTds = startTd.parentElement.children
       for (let i = 0; i < nowTds.length; i++) {
-        if (td.cellIndex < nowTds[i].cellIndex) {
+        if (startTd.cellIndex < nowTds[i].cellIndex) {
           break
         } else {
           k = k + nowTds[i].colSpan
         }
       }
 
-      let nowTrs = td.parentElement.parentElement.children
+      let TRs = startTd.parentElement.parentElement.children
       let targets = []
-      for (let i = 0; i < nowTrs.length; i++) {
-        let nowTr = nowTrs[i]
+      for (let i = 0; i < TRs.length; i++) {
+        let TR = TRs[i]
         let ck = 0 //현재 td의 k
-        let nowTds = nowTr.children
-        let targetTd = null
-        for (let j = 0; j < nowTds.length; j++) {
-          let nowTd = nowTds[j]
-          ck += nowTd.colSpan
-          if (k < ck) {
-            targets.push({ index: nowTd.cellIndex, width: parseInt(nowTd.width) })
-            break
-          }
-          if (k === ck) {
-            //todo parseInt(nowTd.width) 값이 고정되어야 함.. 초기값을 따로 저정할 필요 있음
-            targetTd = { index: nowTd.cellIndex, width: parseInt(nowTd.width) } // + parseInt(distX)
-            targets.push(targetTd)
+        let TDs = TR.children
+        for (let j = 0; j < TDs.length; j++) {
+          let TD = TDs[j]
+          ck += TD.colSpan
+          if (k <= ck) {
+            //target td의 현재 cellIndex, width 를 저장
+            targets.push({ index: TD.cellIndex, width: parseInt(TD.width) })
             break
           }
         }
       }
-      console.log("targets", targets)
+      // console.log("targets", targets)
       return targets
     }
-    return []
   }
 
   // [ {index: index, width: width} ]
-  function NewTCColResize()
-  {
+  function changeWidth() {
     if (mousedown) {
       let distX = event.x - x;
-      let nowTrs = td.parentElement.parentElement.children
+      let nowTrs = startTd.parentElement.parentElement.children
+      // for (let i = 0; i < targets.length; i++) {
+      //   if (targets[i].width + distX < 10) {
+      //
+      //   }
+      // }
       for (let i = 0; i < targets.length; i++) {
         // console.log(nowTrs[i])
         // console.log(targets[i])
@@ -91,121 +87,92 @@
         // console.log(nowTrs[i].children[targets[i].index].width)
         // console.log(targets[i].width)
         if (targets[i].index >= 0) {
-          nowTrs[i].children[targets[i].index].width = targets[i].width + distX
+          let newWidth = targets[i].width + distX
+
+          if (newWidth < 0)
+
+          nowTrs[i].children[targets[i].index].width = newWidth
         }
       }
     }
   }
-  /*
-  function TCColResize()
-  {
-    if (mousedown){
-      var distX = event.x - x;
-      // td.width = parseInt(td_width) + parseInt(distX);
-      // let newWidth = parseInt(td_width) + parseInt(distX);
-
-      //해당 td의 실순서(k) 구함
-      let k = 0
-      for (let i = 0; i < td.parentElement.children.length; i++) {
-        // console.log("td.parentElement.children[i].colSpan====", td.parentElement.children[i].colSpan)
-        // console.log("td.cellIndex", td.cellIndex, "td.parentElement.children[i].cellIndex", td.parentElement.children[i].cellIndex)
-        if (td.cellIndex < td.parentElement.children[i].cellIndex) {
-          break
-        } else {
-          // console.log("td.parentElement.children[i].colspan", td.parentElement.children[i].colSpan)
-          k = k + td.parentElement.children[i].colSpan
-        }
-      }
-      console.log("td", td, "k", k)
-
-      for (let i = 0; i < td.parentElement.parentElement.children.length; i++) {
-        let nowTr = td.parentElement.parentElement.children[i]
-        console.log("tr ========", nowTr)
-        let ck = 0 //현재 td의 k
-        for (let j = 0; j < nowTr.children.length; j++) {
-          let nowTd = nowTr.children[j]
-          console.log("td", nowTd)
-          console.log("k", k, "tdWidth", nowTd.width, "distX", parseInt(distX), "cellIndex", nowTd.cellIndex, "colSpan", nowTd.colSpan)
-          ck += nowTd.colSpan
-          console.log("ck", ck)
-          if (k === ck) {
-            console.log("k === ck 같음")
-            nowTd.width = parseInt(nowTd.width) + parseInt(distX)
-            break
-          }
-        }
-      }
-
-    }
+  function stopResize(){
+    mousedown = false
+    startTd = ''
   }
-  */
-  function TCstopColResize(){
-    mousedown = false;
-    td = '';
-  }
-
-  function cell_left(obj){
+  function isCellLeft(obj){
     if(event.offsetX < 5 && obj.cellIndex!=0)
       return true;
     else
       return false;
   }
-  function cell_right(obj){
+  function isCellRight(obj){
     if(event.offsetX > obj.width-4)
       return true;
     else
       return false;
   }
 
-
-  document.onmousedown = function(){
-    try{
-      var now_mousedown = window.event.srcElement;
-      if(now_mousedown.className.toUpperCase()=="COLRESIZE"){
-        if( cell_left(now_mousedown) ){
-          now_mousedown = now_mousedown.parentNode.childNodes[now_mousedown.cellIndex-1];
-        }else if( !cell_right(now_mousedown) ){
-          return true;
+  document.onmousedown = function() {
+    try {
+      let eventedTd = window.event.srcElement
+      if (eventedTd.className.toUpperCase() === "COLRESIZE") {
+        //셀 왼쪽 border에 위치, 커서 이동
+        if ( isCellLeft(eventedTd) ) {
+          eventedTd = eventedTd.parentNode.childNodes[eventedTd.cellIndex-1]
+          startResize(eventedTd)
         }
-        TCstartColResize(now_mousedown);
+        //셀 오른쪽 border에 위치
+        if ( isCellRight(eventedTd) ) {
+          startResize(eventedTd)
+        }
       }
-    }catch(e){ return true; }
+    } catch(e) {
+      // console.log(e)
+    }
+  }
+
+  document.onmousemove = function() {
+    try {
+      let eventedTd = window.event.srcElement;
+
+      //COLRESIZE 위에 롤오버
+      if(eventedTd.className.toUpperCase() === "COLRESIZE" || startTd !== "") {
+        //border 위에 롤오버
+        if( isCellLeft(eventedTd) || isCellRight(eventedTd) ) {
+          eventedTd.style.cursor = "col-resize"
+        } else {
+          eventedTd.style.cursor = ""
+        }
+
+        if (mousedown) {
+          changeWidth(targets)
+        }
+
+      } else {
+        eventedTd.style.cursor = ""
+      }
+    } catch(e) {
+      // console.log(e)
+    }
   }
 
 
-  document.onmousemove = function(){
-    try{
-      var now_mousemove = window.event.srcElement;
-      if(now_mousemove.className.toUpperCase()=="COLRESIZE" || td!=""){
-
-        if( cell_left(now_mousemove) || cell_right(now_mousemove) ){
-          now_mousemove.style.cursor = "col-resize";
-        }else{
-          now_mousemove.style.cursor = "";
-        }
-
-        NewTCColResize(resizeMatrix());
-
-      }else{
-        now_mousemove.style.cursor = "";
-      }
-    }catch(e){ return true; }
-  }
-
-
-  document.onmouseup = function(){
-    try{
-      var now_mouseup = window.event.srcElement;
-//if(now_mouseup.className=="colResize"){
-      TCstopColResize(now_mouseup);
-//}
-    }catch(e){ return true; }
+  document.onmouseup = function() {
+    try {
+      let now_mouseup = window.event.srcElement;
+      //if(now_mouseup.className=="colResize"){
+      stopResize(now_mouseup);
+      //}
+    } catch(e) {
+      // console.log(e)
+    }
   }
 
 
   document.onselectstart = function(){
     try{
-      if(td != ""){
+      if(startTd != ""){
         return false;
       }
     }catch(e){ return true; }
