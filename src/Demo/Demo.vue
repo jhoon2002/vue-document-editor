@@ -27,6 +27,8 @@
   let x = 0
   let targets = []
   let highlightDown = false
+  let highlightStartTd = ""
+  // let onHighlight = false
 
   function startResize(startObj) {
     mousedown = true
@@ -114,13 +116,16 @@
     else
       return false;
   }
-  function resetHighlight(table) {
-    if (table.id)
-    let TDs = table.getElementsByClassName("highlighted")
-    console.log(TDs.length)
-    for (let TD of TDs) {
-      TD.classList.remove("highlighted")
+  function resetHighlight() {
+    let tables = document.getElementsByClassName("resize-table")
+    for (let table of tables) {
+      // let TDs = table.getElementsByClassName("highlighted")
+      let TDs = table.getElementsByTagName("td")
+      for (let TD of TDs) {
+        TD.classList.remove("highlighted")
+      }
     }
+    highlightDown = false
   }
 
   document.onmousedown = function() {
@@ -140,10 +145,13 @@
         }
         //border 부근이 아닌 셀 중앙
         highlightDown = true
-        console.log("highlightDown", highlightDown)
+        highlightStartTd = eventedTd
+        // console.log("highlightDown", highlightDown)
         return
       }
-      resetHighlight(eventedTd.parentElement.parentElement.parentElement)
+      // 표 외부 클릭시 셀선택 해제
+      highlightDown = false
+      resetHighlight()
 
     } catch(e) {
       // console.log(e)
@@ -163,7 +171,16 @@
           eventedTd.style.cursor = ""
           //셀선택
           if (highlightDown) {
-            eventedTd.classList.add("highlighted")
+            //선택(highlight 처리)이 시작되려면,
+            //선택이 시작되는 td에서 mouse down 후, 다른 셀로 mouse move가 발생해야 함
+            //즉, 시작되는 셀 안에서 mouse down + move가 있는 거만으로 선택되지 않음
+            //이렇게 하는 이유는 시작되는 셀 안에서 text 선택이 가능하게 하기 위함임
+            if (highlightStartTd !== eventedTd) { //이동이 있으면..
+              eventedTd.classList.add("highlighted")
+              highlightStartTd.classList.add("highlighted")
+              //이 과정에서 선택된 텍스트 블록은 해제
+              window.getSelection().removeAllRanges()
+            }
           }
         }
 
@@ -193,13 +210,22 @@
     }
   }
 
-  document.onselectstart = function(){
-    try{
-      if(startTd != ""){
-        return false;
+  document.onselectstart = function() {
+    try {
+      if (startTd !== "") {
+        return false
       }
-    }catch(e){ return true; }
+      // if (highlightDown) {
+      //   return false
+      // }
+    } catch(e) {
+      // console.log(e)
+    }
   }
+
+  // window.document.oncontextmenu = new Function("return false"); window.document.onselectstart = new Function("return false"); window.document.ondragstart = new Function("return false");
+  //
+  // 출처: https://solbel.tistory.com/60 [개발자의 끄적끄적]
 
 
   // //리사이즈시작
@@ -518,7 +544,7 @@
     methods: {
 
       makeTable() {
-        let t = `<table id="resize-table"><tbody><tr><td width=200" colspan="2" class="colresize">가</td><td width="100" class="colresize">다다다</td></tr><tr><td width="100" class="colresize">라라라라</td><td width="100" class="colresize">마마마마 마</td><td width="100" class="colresize">바바바바 바바</td></tr></tbody></table>`;
+        let t = `<table class="resize-table"><tbody><tr><td width=200" colspan="2" class="colresize">가</td><td width="100" class="colresize">다다다</td></tr><tr><td width="100" class="colresize">라라라라</td><td width="100" class="colresize">마마마마 마</td><td width="100" class="colresize">바바바바 바바</td></tr></tbody></table>`;
         document.execCommand("insertHtml", false, t)
         // let resizeTable = document.getElementById("resize-table")
         // console.log("resizeTable", resizeTable)
