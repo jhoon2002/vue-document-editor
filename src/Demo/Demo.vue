@@ -128,8 +128,21 @@
     highlightDown = false
   }
 
+  //realspace의 높이를 spacer에 반영해줌
+  //결재선(realspacer)과 content 가 서로 겹치지 않고, 페이징 반영이 잘되도록 하는 조치
+  function refreshSpacer() {
+    let spacer = document.getElementById("spacer")
+    let realSpacer = document.getElementById("real-space")
+    spacer.style.height = realSpacer.clientHeight + "px"
+  }
+
   document.onmousedown = function() {
     try {
+
+      //마우스 클릭 시, 마다 spacer 높이를 재설정 해줌...
+      //TODO: 이렇게 자주 할 필요 있을까.. 있을 수도 있음
+      refreshSpacer()
+
       let eventedTd = window.event.srcElement
       if (eventedTd.className.toUpperCase() === "COLRESIZE") {
         //셀 왼쪽 border에 위치, 커서 이동
@@ -241,10 +254,6 @@
   // document.addEventListener("selectstart", select_start)
 
 
-
-
-
-
   export default {
     components: { VueDocumentEditor, VueFileToolbarMenu },
 
@@ -252,7 +261,7 @@
       return {
         // This is where the pages content is stored and synced
         content: [
-          '------<이하 입력>------'
+          '<div style="height: 50mm; background: #e3e3e3" contenteditable="false">헤드</div><br><div id="spacer" style="background: #f1eae7" contenteditable="false">&nbsp;스페이서</div>'
         ],
         zoom: 0.8,
         zoom_min: 0.10,
@@ -591,9 +600,13 @@
         let html = '<div style="position: absolute; bottom: 8mm; ' + ((page % 2) ? 'right' : 'left') + ': 10mm">Page ' + page + ' of ' + total + '</div>';
 
         // Add custom headers and footers from page 3
-        if(page >= 3) {
-          html += '<div style="position: absolute; left: 0; top: 0; right: 0; padding: 3mm 5mm; background: rgba(200, 220, 240, 0.5)"><strong>MYCOMPANY</strong> example.com /// This is a custom header overlay</div>';
-          html += '<div style="position: absolute; left: 10mm; right: 10mm; bottom: 5mm; text-align:center; font-size:10pt">Copyright (c) 2020 Romain Lamothe, MIT License /// This is a custom footer overlay</div>';
+        // if(page >= 3) {
+        //   html += '<div style="position: absolute; left: 0; top: 0; right: 0; padding: 3mm 5mm; background: rgba(200, 220, 240, 0.5)"><strong>MYCOMPANY</strong> example.com /// This is a custom header overlay</div>';
+        //   html += '<div style="position: absolute; left: 10mm; right: 10mm; bottom: 5mm; text-align:center; font-size:10pt">Copyright (c) 2020 Romain Lamothe, MIT License /// This is a custom footer overlay</div>';
+        // }
+
+        if (page === total) {
+          html += '<div id="real-space" style="height: 30mm; width: 170mm; background: #FAFAFA; position: absolute; bottom: 20mm" contenteditable="false">&nbsp; 흐히히</div>'
         }
         return html;
       },
@@ -687,7 +700,6 @@
     background-color: rgba(0, 0, 0, 0.8);
   }
 </style>
-
 <style scoped>
   .main {
     width: fit-content;

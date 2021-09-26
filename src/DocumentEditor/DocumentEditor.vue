@@ -206,6 +206,17 @@ export default {
             if(!next_page_elt.childNodes.length) this.pages.splice(page_idx + 1, 1);
           }
 
+          //TODO: 마지막 페이지 경우, clientHeight에 결재선 테이블 높이 만큼 더해줄 수 있다면..
+          console.log("page_idx", page_idx)
+          // console.log("this.pages.length", this.pages.length)
+          console.log("page_elt.clientHeight", page_elt.clientHeight)
+          console.log("this.pages_height", this.pages_height)
+
+          // let m = 0
+          // if ( page_idx + 1 === this.pages.length) {
+          //   m = 300
+          // }
+
           // FORWARD-PROPAGATION
           // check if content overflows
           if(page_elt.clientHeight > this.pages_height) {
