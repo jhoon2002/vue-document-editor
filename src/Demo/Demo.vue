@@ -261,7 +261,7 @@
       return {
         // This is where the pages content is stored and synced
         content: [
-          '<div style="height: 50mm; background: #e3e3e3" contenteditable="false">헤드</div><br><div id="spacer" style="background: #f1eae7" contenteditable="false">&nbsp;스페이서</div>'
+          ''
         ],
         zoom: 0.8,
         zoom_min: 0.10,
@@ -605,9 +605,9 @@
         //   html += '<div style="position: absolute; left: 10mm; right: 10mm; bottom: 5mm; text-align:center; font-size:10pt">Copyright (c) 2020 Romain Lamothe, MIT License /// This is a custom footer overlay</div>';
         // }
 
-        if (page === total) {
-          html += '<div id="real-space" style="height: 30mm; width: 170mm; background: #FAFAFA; position: absolute; bottom: 20mm" contenteditable="false">&nbsp; 흐히히</div>'
-        }
+        // if (page === total) {
+        //   html += '<div id="real-space" style="height: 30mm; width: 170mm; background: #FAFAFA; position: absolute; bottom: 20mm" contenteditable="false">&nbsp; 흐히히</div>'
+        // }
         return html;
       },
 
